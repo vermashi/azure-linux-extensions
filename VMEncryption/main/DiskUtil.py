@@ -51,6 +51,19 @@ class DiskUtil(object):
 
         self.command_executor = CommandExecutor(self.logger)
 
+    def copy_only_used(self, ongoing_item_config, status_prefix=''):
+        try:
+            #invoke partclone variant depending on the fs type
+            partclone_command = "/usr/local/sbin/partclone." + ongoing_item_config.file_system
+            self.command_executor.Execute("{0} -d -b -s {1} -o {2} -q".format(partclone_command,
+                                                                              ongoing_item_config.current_source_path,
+                                                                              ongoing_item_config.current_destination),
+                                          True)
+        except Exception as e:
+            message = "Failed to perform partclone copy: {0}, stack trace: {1}".format(e, traceback.format_exc())
+            self.logger.log(msg=message, level=CommonVariables.ErrorLevel)
+
+
     def copy(self, ongoing_item_config, status_prefix=''):
         copy_task = TransactionalCopyTask(logger=self.logger,
                                           disk_util=self,

@@ -882,7 +882,7 @@ def encrypt_inplace_without_seperate_header_file(passphrase_file,
                     logger.log(msg="the header slice file is there, remove it.", level = CommonVariables.WarningLevel)
                     os.remove(encryption_environment.copy_header_slice_file_path)
 
-                copy_result = disk_util.copy(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
+                copy_result = disk_util.copy_only_used(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
 
                 if copy_result != CommonVariables.process_success:
                     logger.log(msg="copy the header block failed, return code is: {0}".format(copy_result),
@@ -925,7 +925,7 @@ def encrypt_inplace_without_seperate_header_file(passphrase_file,
             ongoing_item_config.phase = CommonVariables.EncryptionPhaseCopyData
             ongoing_item_config.commit()
 
-            copy_result = disk_util.copy(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
+            copy_result = disk_util.copy_only_used(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
             if copy_result != CommonVariables.process_success:
                 logger.log(msg="copy the main content block failed, return code is: {0}".format(copy_result),
                            level=CommonVariables.ErrorLevel)
@@ -947,7 +947,7 @@ def encrypt_inplace_without_seperate_header_file(passphrase_file,
             ongoing_item_config.current_total_copy_size = CommonVariables.default_block_size
             ongoing_item_config.commit()
 
-            copy_result = disk_util.copy(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
+            copy_result = disk_util.copy_only_used(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
 
             if copy_result == CommonVariables.process_success:
                 crypt_item_to_update = CryptItem()
@@ -1099,7 +1099,7 @@ def encrypt_inplace_with_seperate_header_file(passphrase_file,
                 ongoing_item_config.from_end = True
                 ongoing_item_config.commit()
 
-                copy_result = disk_util.copy(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
+                copy_result = disk_util.copy_only_used(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
 
                 if copy_result != CommonVariables.success:
                     error_message = "the copying result is {0} so skip the mounting".format(copy_result)
@@ -1179,7 +1179,7 @@ def decrypt_inplace_copy_data(passphrase_file,
                    level=CommonVariables.InfoLevel)
 
         if current_phase == CommonVariables.DecryptionPhaseCopyData:
-            copy_result = disk_util.copy(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
+            copy_result = disk_util.copy_only_used(ongoing_item_config=ongoing_item_config, status_prefix=status_prefix)
             if copy_result == CommonVariables.process_success:
                 mount_point = ongoing_item_config.get_mount_point()
                 if mount_point and mount_point != "None":
