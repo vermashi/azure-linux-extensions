@@ -54,7 +54,7 @@ class DiskUtil(object):
     def copy_only_used(self, ongoing_item_config, status_prefix=''):
         try:
             #invoke partclone variant depending on the fs type
-            partclone_command = "/usr/local/sbin/partclone." + ongoing_item_config.file_system.lower()
+            partclone_command = "/usr/sbin/partclone." + ongoing_item_config.file_system.lower()
             copy_command = "{0} -d -b -s {1} -o {2} -q".format(partclone_command,
                                                                ongoing_item_config.current_source_path,
                                                                ongoing_item_config.current_destination)
