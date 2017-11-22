@@ -33,6 +33,9 @@ class EncryptBlockDeviceState(OSEncryptionState):
     def should_enter(self):
         self.context.logger.log("Verifying if machine should enter encrypt_block_device state")
 
+        if os.path.exists('/dev/mapper/osencrypt'):
+            return False
+
         if not super(EncryptBlockDeviceState, self).should_enter():
             return False
         
@@ -56,7 +59,7 @@ class EncryptBlockDeviceState(OSEncryptionState):
                                             status_code=str(CommonVariables.success),
                                             message='OS disk encryption started')
 
-        self.command_executor.Execute('dd if={0} of=/dev/mapper/osencrypt bs=52428800'.format(self.rootfs_block_device), True)
+        self.command_executor.Execute('/urs/sbin/partclone.xfs -b -s {0} -o /dev/mapper/osencrypt -q'.format(self.rootfs_block_device), True)
 
     def should_exit(self):
         self.context.logger.log("Verifying if machine should exit encrypt_block_device state")

@@ -33,6 +33,9 @@ class EncryptBlockDeviceState(OSEncryptionState):
     def should_enter(self):
         self.context.logger.log("Verifying if machine should enter encrypt_block_device state")
 
+        if os.path.exists('/dev/mapper/osencrypt'):
+            return False
+
         if not super(EncryptBlockDeviceState, self).should_enter():
             return False
         
