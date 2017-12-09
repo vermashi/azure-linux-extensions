@@ -62,7 +62,7 @@ class EncryptBlockDeviceState(OSEncryptionState):
                                             status_code=str(CommonVariables.success),
                                             message='OS disk encryption started')
 
-        self.command_executor.Execute('/urs/sbin/partclone.ext4 -b -s {0} -o /dev/mapper/osencrypt -q'.format(self.rootfs_block_device), True)
+        self.command_executor.Execute('/usr/sbin/partclone.ext4 -b -s {0} -o /dev/mapper/osencrypt -q'.format(self.rootfs_block_device), True)
 
     def should_exit(self):
         self.context.logger.log("Verifying if machine should exit encrypt_block_device state")
