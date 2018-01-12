@@ -706,6 +706,36 @@ class DiskUtil(object):
         DiskUtil.sles_cache[(dev_name, property_name)] = property_value
         return property_value
 
+    def get_block_device_to_azure_udev_table(self):
+        table = {}
+        azure_links_dir = '/dev/disk/azure'
+        
+        if not os.path.exists(azure_links_dir):
+            return table
+
+        for top_level_item in os.listdir(azure_links_dir):
+            top_level_item_full_path = os.path.join(azure_links_dir, top_level_item)
+            if os.path.isdir(top_level_item_full_path):
+                scsi_path = os.path.join(azure_links_dir, top_level_item)
+                for symlink in os.listdir(scsi_path):
+                    symlink_full_path = os.path.join(scsi_path, symlink)
+                    table[os.path.realpath(symlink_full_path)] = symlink_full_path
+            else:
+                table[os.path.realpath(top_level_item_full_path)] = top_level_item_full_path
+        return table
+
+    def get_azure_symlinks(self):
+        azure_udev_links = {}
+
+        if os.path.exists('/dev/disk/azure'):
+            wdbackup = os.getcwd()
+            os.chdir('/dev/disk/azure')
+            for symlink in os.listdir('/dev/disk/azure'):
+                azure_udev_links[os.path.basename(symlink)] = os.path.realpath(symlink)
+            os.chdir(wdbackup)
+
+        return azure_udev_links
+
     def get_device_items_sles(self, dev_path):
         if dev_path:
             self.logger.log(msg=("getting blk info for: {0}".format(dev_path)))
@@ -885,12 +915,16 @@ class DiskUtil(object):
         lvm_items = filter(lambda item: item.vg_name == "rootvg", self.get_lvm_items())
 
         current_lv_names = set([item.lv_name for item in lvm_items])
-        expected_lv_names = set(['homelv', 'optlv', 'rootlv', 'swaplv', 'tmplv', 'usrlv', 'varlv'])
 
+        DiskUtil.os_disk_lvm = False
+
+        expected_lv_names = set(['homelv', 'optlv', 'rootlv', 'swaplv', 'tmplv', 'usrlv', 'varlv'])
         if expected_lv_names == current_lv_names:
             DiskUtil.os_disk_lvm = True
-        else:
-            DiskUtil.os_disk_lvm = False
+
+        expected_lv_names = set(['homelv', 'optlv', 'rootlv', 'tmplv', 'usrlv', 'varlv'])
+        if expected_lv_names == current_lv_names:
+            DiskUtil.os_disk_lvm = True
 
         return DiskUtil.os_disk_lvm
 

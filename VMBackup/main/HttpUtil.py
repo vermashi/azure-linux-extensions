@@ -19,10 +19,13 @@
 import time
 import datetime
 import traceback
-import urlparse
-import httplib
+try:
+    import httplib as httplibs
+except ImportError:
+    import http.client as httplibs
 import shlex
 import subprocess
+import sys
 from common import CommonVariables
 from subprocess import *
 from Utils.WAAgentUtil import waagent
@@ -71,7 +74,7 @@ class HttpUtil(object):
 
     def Call(self, method, sasuri_obj, data, headers, fallback_to_curl = False):
         try:
-            result, resp, errorMsg = self.HttpCallGetResponse(method, sasuri_obj, data, headers)
+            result, resp, errorMsg, responseBody = self.HttpCallGetResponse(method, sasuri_obj, data, headers)
             self.logger.log("HttpUtil Call : result: " + str(result) + ", errorMsg: " + str(errorMsg))
             if(result == CommonVariables.success and resp != None):
                 self.logger.log("resp-header: " + str(resp.getheaders()))
@@ -79,9 +82,8 @@ class HttpUtil(object):
                 self.logger.log("Http connection response is None")
 
             self.logger.log(" resp status: " + str(resp.status))
-            responseBody = resp.read()
             if(responseBody is not None):
-                self.logger.log("responseBody: " + (responseBody).decode('utf-8-sig'))
+                self.logger.log("responseBody: " + responseBody)
 
             if(resp.status == 200 or resp.status == 201):
                 return CommonVariables.success
@@ -99,16 +101,18 @@ class HttpUtil(object):
         result = CommonVariables.error_http_failure
         resp = None
         errorMsg = None
+        responseBody = None
         try:
             resp = None
             if(self.proxyHost == None or self.proxyPort == None):
-                connection = httplib.HTTPSConnection(sasuri_obj.hostname, timeout = 10)
+                connection = httplibs.HTTPSConnection(sasuri_obj.hostname, timeout = 10)
                 self.logger.log("Details of sas uri object  hostname: " + str(sasuri_obj.hostname) + " path: " + str(sasuri_obj.path) + " query: " + str(sasuri_obj.query))
                 connection.request(method=method, url=(sasuri_obj.path + '?' + sasuri_obj.query), body=data, headers = headers)
                 resp = connection.getresponse()
+                responseBody = resp.read().decode('utf-8')
                 connection.close()
             else:
-                connection = httplib.HTTPSConnection(self.proxyHost, self.proxyPort, timeout = 10)
+                connection = httplibs.HTTPSConnection(self.proxyHost, self.proxyPort, timeout = 10)
                 connection.set_tunnel(sasuri_obj.hostname, 443)
                 # If proxy is used, full url is needed.
                 path = "https://{0}:{1}{2}".format(sasuri_obj.hostname, 443, (sasuri_obj.path + '?' + sasuri_obj.query))
@@ -119,4 +123,6 @@ class HttpUtil(object):
         except Exception as e:
             errorMsg = str(datetime.datetime.now()) +  " Failed to call http with error: %s, stack trace: %s" % (str(e), traceback.format_exc())
             self.logger.log(errorMsg)
-        return result, resp, errorMsg
+            if sys.version[0] == 2 and sys.version[1] == 6:
+                self.CallUsingCurl(method,sasuri_obj,data,headers)
+        return result, resp, errorMsg, responseBody
