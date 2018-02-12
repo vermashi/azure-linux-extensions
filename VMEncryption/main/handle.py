@@ -692,13 +692,12 @@ def enable_encryption():
                       code=str(CommonVariables.unknown_error),
                       message=message)
 
-def enable_encryption_format(passphrase, encryption_marker, disk_util):
+def enable_encryption_format(passphrase, disk_format_query, disk_util, force=False):
     logger.log('enable_encryption_format')
-    encryption_parameters = encryption_marker.get_encryption_disk_format_query()
-    logger.log('disk format query is {0}'.format(encryption_parameters))
+    logger.log('disk format query is {0}'.format(disk_format_query))
 
     try:
-        json_parsed = json.loads(encryption_parameters)
+        json_parsed = json.loads(disk_format_query)
 
         if type(json_parsed) is dict:
             encryption_format_items = [json_parsed,]
@@ -727,7 +726,10 @@ def enable_encryption_format(passphrase, encryption_marker, disk_util):
             continue
         else:
             device_item = devices[0]
-            if device_item.file_system is None or device_item.file_system == "":
+            if device_item.file_system is None or device_item.file_system == "" or force:
+                if device_item.mount_point:
+                    disk_util.swapoff()
+                    disk_util.umount(device_item.mount_point)
                 mapper_name = str(uuid.uuid4())
                 logger.log("encrypting " + str(device_item))
                 encrypted_device_path = os.path.join(CommonVariables.dev_mapper_root, mapper_name)
@@ -1669,8 +1671,9 @@ def daemon_encrypt_data_volumes(encryption_marker, encryption_config, disk_util,
                                                              disk_util=disk_util,
                                                              bek_util=bek_util)
             elif encryption_marker.get_current_command() == CommonVariables.EnableEncryptionFormat:
+                disk_format_query = encryption_marker.get_encryption_disk_format_query()
                 failed_item = enable_encryption_format(passphrase=bek_passphrase_file,
-                                                       encryption_marker=encryption_marker,
+                                                       disk_format_query=disk_format_query,
                                                        disk_util=disk_util)
             elif encryption_marker.get_current_command() == CommonVariables.EnableEncryptionFormatAll:
                 failed_item = enable_encryption_all_format(passphrase_file=bek_passphrase_file,
