@@ -63,6 +63,18 @@ def install():
     hutil.do_parse_context('Install')
     hutil.restore_old_configs()
     hutil.do_status_report(operation='Install', status=CommonVariables.extension_success_status, status_code=str(CommonVariables.success), message='Installing pre-requisites')
+    logger.log("Installing minimal pre-requisites")
+    DistroPatcher.install_minimal()
+
+    disk_util = DiskUtil(hutil=hutil, patching=DistroPatcher, logger=logger, encryption_environment=encryption_environment)
+    bek_util = BekUtil(disk_util, logger)
+    encryption_config = EncryptionConfig(encryption_environment, logger)
+
+    bek_passphrase_file = bek_util.get_bek_passphrase_file(encryption_config)
+    if bek_passphrase_file is not None:
+        logger.log("BEK file found, consolidating azure_crypt_mount at install")
+        disk_util.consolidate_azure_crypt_mount(bek_passphrase_file)
+
     logger.log("Installing pre-requisites")
     DistroPatcher.install_extras()
     hutil.do_exit(0, 'Install', CommonVariables.extension_success_status, str(CommonVariables.success), 'Install Succeeded')
@@ -398,16 +410,16 @@ def toggle_se_linux_for_centos7(disable):
 def mount_encrypted_disks(disk_util, bek_util, passphrase_file, encryption_config):
 
     # mount encrypted resource disk
-    resource_disk_util = ResourceDiskUtil(hutil, logger, DistroPatcher)
     if encryption_config.config_file_exists():
         volume_type = encryption_config.get_volume_type().lower()
-        if volume_type == CommonVariables.VolumeTypeData.lower() or volume_type == CommonVariables.VolumeTypeAll.lower():
-            resource_disk_util.automount()
-            logger.log("mounted encrypted resource disk")
     else:
         # Probably a re-image scenario: Just do a best effort
-        if resource_disk_util.try_remount():
-            logger.log("mounted encrypted resource disk")
+        volume_type = get_public_settings().get(CommonVariables.VolumeTypeKey)
+
+    if volume_type == CommonVariables.VolumeTypeData.lower() or volume_type == CommonVariables.VolumeTypeAll.lower():
+        resource_disk_util = ResourceDiskUtil(hutil, logger, DistroPatcher)
+        resource_disk_util.automount()
+        logger.log("mounted encrypted resource disk")
 
     # mount any data disks - make sure the azure disk config path exists.
     for crypt_item in disk_util.get_crypt_items():

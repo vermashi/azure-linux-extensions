@@ -73,7 +73,7 @@ class centosPatching(redhatPatching):
             self.resize2fs_path = '/sbin/resize2fs'
             self.umount_path = '/usr/bin/umount'
 
-    def install_extras(self):
+    def install_minimal(self):
         epel_packages_installed = False
         attempt = 0
 
@@ -108,15 +108,25 @@ class centosPatching(redhatPatching):
                     epel_packages_installed = True
 
         packages = ['cryptsetup',
-                    'lsscsi',
-                    'psmisc',
                     'cryptsetup-reencrypt',
+                    'util-linux']
+                    
+        if self.distro_info[1].startswith("6."):
+            packages.remove('cryptsetup')
+            packages.remove('util-linux')
+
+        if self.command_executor.Execute("rpm -q " + " ".join(packages)):
+            self.command_executor.Execute("yum install -y " + " ".join(packages))
+
+    def install_extras(self):
+        self.install_minimal()
+        packages = ['lsscsi',
+                    'psmisc',
                     'lvm2',
                     'uuid',
                     'at',
                     'patch',
                     'procps-ng',
-                    'util-linux',
                     'gcc',
                     'python-six',
                     'pyparted',
@@ -126,16 +136,10 @@ class centosPatching(redhatPatching):
                     'nmap-ncat']
 
         if self.distro_info[1].startswith("6."):
-            packages.remove('cryptsetup')
             packages.remove('procps-ng')
-            packages.remove('util-linux')
 
         if self.command_executor.Execute("rpm -q " + " ".join(packages)):
             self.command_executor.Execute("yum install -y " + " ".join(packages))
-
-        if self.command_executor.Execute("pip show adal"):
-            self.command_executor.Execute("pip install --upgrade six")
-            self.command_executor.Execute("pip install adal")
 
     def update_prereq(self):
         if ((self.distro_info[1] in ["7.3.1611", "7.2.1511"]) or (self.distro_info[1].startswith('7.4'))):

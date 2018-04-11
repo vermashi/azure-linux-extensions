@@ -81,7 +81,7 @@ class redhatPatching(AbstractPatching):
             self.touch_path = '/usr/bin/touch'
             self.umount_path = '/usr/bin/umount'
 
-    def install_extras(self):
+    def install_minimal(self):
         epel_packages_installed = False
         attempt = 0
 
@@ -116,15 +116,26 @@ class redhatPatching(AbstractPatching):
                     epel_packages_installed = True
 
         packages = ['cryptsetup',
-                    'lsscsi',
-                    'psmisc',
                     'cryptsetup-reencrypt',
+                    'util-linux']
+
+        if self.distro_info[1].startswith("6."):
+            packages.remove('cryptsetup')
+            packages.remove('util-linux')
+
+        if self.command_executor.Execute("rpm -q " + " ".join(packages)):
+            self.command_executor.Execute("yum install -y " + " ".join(packages))
+
+    def install_extras(self):
+        self.install_minimal()
+
+        packages = ['lsscsi',
+                    'psmisc',
                     'lvm2',
                     'uuid',
                     'at',
                     'patch',
                     'procps-ng',
-                    'util-linux',
                     'gcc',
                     'libffi-devel',
                     'openssl-devel',
@@ -132,16 +143,10 @@ class redhatPatching(AbstractPatching):
                     'nmap-ncat']
 
         if self.distro_info[1].startswith("6."):
-            packages.remove('cryptsetup')
             packages.remove('procps-ng')
-            packages.remove('util-linux')
 
         if self.command_executor.Execute("rpm -q " + " ".join(packages)):
             self.command_executor.Execute("yum install -y " + " ".join(packages))
-
-        if self.command_executor.Execute("pip show adal"):
-            self.command_executor.Execute("pip install --upgrade six")
-            self.command_executor.Execute("pip install adal")
 
     def update_prereq(self):
         if self.distro_info[1] in ["7.2", "7.3", "7.4"]:
