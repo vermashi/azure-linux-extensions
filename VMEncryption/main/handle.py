@@ -74,6 +74,10 @@ def install():
     if bek_passphrase_file is not None:
         logger.log("BEK file found, consolidating azure_crypt_mount at install")
         disk_util.consolidate_azure_crypt_mount(bek_passphrase_file)
+        mount_encrypted_disks(disk_util=disk_util,
+                              bek_util=bek_util,
+                              encryption_config=encryption_config,
+                              passphrase_file=bek_passphrase_file)
 
     logger.log("Installing pre-requisites")
     DistroPatcher.install_extras()
