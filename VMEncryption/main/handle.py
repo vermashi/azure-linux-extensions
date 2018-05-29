@@ -1527,6 +1527,7 @@ def daemon_encrypt():
               (distro_name == 'centos' and distro_version.startswith('7.4'))) and 
               (disk_util.is_os_disk_lvm() or os.path.exists('/volumes.lvm'))):
 
+
             from oscrypto.rhel_72_lvm import RHEL72LVMEncryptionStateMachine
             os_encryption = RHEL72LVMEncryptionStateMachine(hutil=hutil,
                                                             distro_patcher=DistroPatcher,
