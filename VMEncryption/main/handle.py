@@ -703,7 +703,7 @@ def enable_encryption():
                       code=str(CommonVariables.unknown_error),
                       message=message)
 
-def enable_encryption_format(passphrase, encryption_format_items, disk_util, force=False, os_item_to_stamp):
+def enable_encryption_format(passphrase, encryption_format_items, disk_util, force=False, os_item_to_stamp=[]):
     logger.log('enable_encryption_format')
     logger.log('disk format query is {0}'.format(json.dumps(encryption_format_items)))
 
@@ -1282,7 +1282,7 @@ def enable_encryption_all_format(passphrase_file, encryption_marker, disk_util, 
 
     return encrypt_format_device_items(passphrase_file, device_items_to_encrypt, disk_util, True, os_item_to_stamp)
 
-def encrypt_format_device_items(passphrase, device_items, disk_util, force=False, os_item_to_stamp):
+def encrypt_format_device_items(passphrase, device_items, disk_util, force=False, os_item_to_stamp=[]):
     """
     Formats the block devices represented by the supplied device_item.
 
