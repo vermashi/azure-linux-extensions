@@ -195,6 +195,9 @@ def stamp_disks_with_settings(new_device_items_about_to_get_encrypted, os_item_t
         data["DiskEncryptionDataVersion"] = "2.0"
         settings.post_to_wireserver(data)
 
+    global is_stamped
+    is_stamped = True
+
     settings.remove_protector_file(new_protector_name)
 
     encryption_config.passphrase_file_name = extension_parameter.DiskEncryptionKeyFileName
@@ -1505,7 +1508,7 @@ def daemon_encrypt():
 
     # SP: if OS or ALL - add os_device_item to extra_items  
 
-    os_item = []
+    os_item_to_stamp = []
     os_encryption = None
 
     if volume_type == CommonVariables.VolumeTypeOS.lower() or volume_type == CommonVariables.VolumeTypeAll.lower():
@@ -1583,8 +1586,11 @@ def daemon_encrypt():
         device_items = disk_util.get_device_items(None)
         for device_item in device_items:
             if device_item.mount_point == "/":
-                os_item.append(device_item)
+                os_item_to_stamp.append(device_item)
     
+    global is_stamped
+    is_stamped = False
+
     # os to encrypt (if any) has been identified, now start on data volumes
     if (volume_type == CommonVariables.VolumeTypeData.lower() or volume_type == CommonVariables.VolumeTypeAll.lower()) and \
         is_not_in_stripped_os:
@@ -1594,7 +1600,7 @@ def daemon_encrypt():
                                                   disk_util=disk_util,
                                                   bek_util=bek_util,
                                                   bek_passphrase_file=bek_passphrase_file,
-                                                  os_item_to_stamp=os_item):
+                                                  os_item_to_stamp=os_item_to_stamp):
                 logger.log("Calling daemon_encrypt_data_volumes again")
         except Exception as e:
             message = "Failed to encrypt data volumes with error: {0}, stack trace: {1}".format(e, traceback.format_exc())
@@ -1612,8 +1618,9 @@ def daemon_encrypt():
     
     if (volume_type == CommonVariables.VolumeTypeOS.lower() or volume_type == CommonVariables.VolumeTypeAll.lower()) and \
         is_not_in_stripped_os:
-        # SP TODO: skip this call if stamp was already called for data volumes 
-        stamp_disks_with_settings([], os_item_to_stamp, encryption_config)
+        # stamp here if only OS disk is being encrypted
+        if not is_stamped:
+            stamp_disks_with_settings([], os_item_to_stamp, encryption_config)
 
         try:
             os_encryption.start_encryption()
