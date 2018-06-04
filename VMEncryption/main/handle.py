@@ -198,6 +198,13 @@ def stamp_disks_with_settings(new_device_items_about_to_get_encrypted, os_item_t
     global is_stamped
     is_stamped = True
 
+    # exit transitioning state by issuing a status report indicating
+    # that the necessary encryption settings are stamped successfully
+    hutil.do_status_report(operation=CommonVariables.EnableEncryption,
+                           status=CommonVariables.extension_success_status,
+                           status_code=str(CommonVariables.success),
+                           message='Encryption settings stamped successfully')
+
     settings.remove_protector_file(new_protector_name)
 
     encryption_config.passphrase_file_name = extension_parameter.DiskEncryptionKeyFileName
