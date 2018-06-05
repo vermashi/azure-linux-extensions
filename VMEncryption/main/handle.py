@@ -1306,7 +1306,7 @@ def encrypt_format_device_items(passphrase, device_items, disk_util, force=False
     #use the new udev names for formatting and later on for cryptmounting
     dev_path_reference_table = disk_util.get_block_device_to_azure_udev_table()
 
-    def device_item_to_encryption_format_item(device_item, disk_util):
+    def device_item_to_encryption_format_item(device_item):
         """
         Converts a single device_item into an encryption format item (a.k.a. a disk format query element)
         """
