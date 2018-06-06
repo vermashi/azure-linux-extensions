@@ -86,13 +86,11 @@ def disable_encryption():
 
     if decryption_marker.config_file_exists():
         logger.log(msg="decryption is marked, starting daemon.", level=CommonVariables.InfoLevel)
+        hutil.do_status_report(operation=CommonVariables.DisableEncryption,
+                               status=CommonVariables.extension_success_status,
+                               status_code=str(CommonVariables.success),
+                               message='Decryption started')
         start_daemon('DisableEncryption')
-
-        hutil.do_exit(exit_code=0,
-                      operation='DisableEncryption',
-                      status=CommonVariables.extension_success_status,
-                      code=str(CommonVariables.success),
-                      message='Decryption started')
 
     exit_status = {
         'operation': 'DisableEncryption',
@@ -657,7 +655,11 @@ def enable_encryption():
                                                     disk_format_query=extension_parameter.DiskFormatQuery)
                 start_daemon('EnableEncryption')
             else:
-                # prepare to create secret, place on key volume, and request key vault update via wire protocol
+                # begin reporting a transitioning status until encryption settings are stamped
+                hutil.do_status_report(operation=CommonVariables.EnableEncryption,
+                                       status=CommonVariables.extension_transitioning_status,
+                                       status_code=str(CommonVariables.success),
+                                       message='Preparing to encrypt')
 
                 # get supported volume types
                 instance = MetadataUtil(logger)
@@ -1892,20 +1894,8 @@ def start_daemon(operation):
     
     encryption_config = EncryptionConfig(encryption_environment, logger)
     if encryption_config.config_file_exists():
-        executor = CommandExecutor(logger)
-        encryption_in_progress = bool(executor.Execute("mountpoint /oldroot"))
-        if encryption_in_progress:
-            # report success while encrypting to avoid forced platform timeouts
-            current_status = CommonVariables.extension_success_status
-        else:
-            # report transitioning until encryption settings are posted
-            current_status = CommonVariables.extension_transitioning_status
-
-        hutil.do_exit(exit_code=0,
-                      operation=operation,
-                      status=current_status,
-                      code=str(CommonVariables.success),
-                      message="")
+        hutil.redo_last_status()
+        exit_without_status_report()
     else:
         hutil.do_exit(exit_code=0,
                       operation=operation,
