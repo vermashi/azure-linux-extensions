@@ -1513,8 +1513,6 @@ def daemon_encrypt():
     is_not_in_stripped_os = bool(executor.Execute("mountpoint /oldroot"))
     volume_type = encryption_config.get_volume_type().lower()
 
-    # SP: if OS or ALL - add os_device_item to extra_items  
-
     os_item_to_stamp = []
     os_encryption = None
 
@@ -1598,7 +1596,7 @@ def daemon_encrypt():
     global is_stamped
     is_stamped = False
 
-    # os to encrypt (if any) has been identified, now start on data volumes
+    # os to encrypt (if any) has been identified, now identify data volumes and begin encryption
     if (volume_type == CommonVariables.VolumeTypeData.lower() or volume_type == CommonVariables.VolumeTypeAll.lower()) and \
         is_not_in_stripped_os:
         try:
@@ -1894,9 +1892,18 @@ def start_daemon(operation):
     
     encryption_config = EncryptionConfig(encryption_environment, logger)
     if encryption_config.config_file_exists():
+        executor = CommandExecutor(logger)
+        encryption_in_progress = bool(executor.Execute("mountpoint /oldroot"))
+        if encryption_in_progress:
+            # report success while encrypting to avoid forced platform timeouts
+            current_status = CommonVariables.extension_success_status
+        else:
+            # report transitioning until encryption settings are posted
+            current_status = CommonVariables.extension_transitioning_status
+
         hutil.do_exit(exit_code=0,
                       operation=operation,
-                      status=CommonVariables.extension_transitioning_status,
+                      status=current_status,
                       code=str(CommonVariables.success),
                       message="")
     else:
