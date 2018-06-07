@@ -1894,7 +1894,6 @@ def start_daemon(operation):
     
     encryption_config = EncryptionConfig(encryption_environment, logger)
     if encryption_config.config_file_exists():
-        hutil.redo_last_status()
         exit_without_status_report()
     else:
         hutil.do_exit(exit_code=0,
