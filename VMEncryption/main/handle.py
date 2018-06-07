@@ -86,11 +86,13 @@ def disable_encryption():
 
     if decryption_marker.config_file_exists():
         logger.log(msg="decryption is marked, starting daemon.", level=CommonVariables.InfoLevel)
-        hutil.do_status_report(operation=CommonVariables.DisableEncryption,
-                               status=CommonVariables.extension_success_status,
-                               status_code=str(CommonVariables.success),
-                               message='Decryption started')
         start_daemon('DisableEncryption')
+        
+        hutil.do_exit(exit_code=0,
+                      operation='DisableEncryption',
+                      status=CommonVariables.extension_success_status,
+                      code=str(CommonVariables.success),
+                      message='Decryption started')
 
     exit_status = {
         'operation': 'DisableEncryption',
@@ -192,9 +194,6 @@ def stamp_disks_with_settings(new_device_items_about_to_get_encrypted, os_item_t
         # if host does not support 3.0 protocol version, retry with 2.0
         data["DiskEncryptionDataVersion"] = "2.0"
         settings.post_to_wireserver(data)
-
-    global is_stamped
-    is_stamped = True
 
     # exit transitioning state by issuing a status report indicating
     # that the necessary encryption settings are stamped successfully
@@ -655,12 +654,6 @@ def enable_encryption():
                                                     disk_format_query=extension_parameter.DiskFormatQuery)
                 start_daemon('EnableEncryption')
             else:
-                # begin reporting a transitioning status until encryption settings are stamped
-                hutil.do_status_report(operation=CommonVariables.EnableEncryption,
-                                       status=CommonVariables.extension_transitioning_status,
-                                       status_code=str(CommonVariables.success),
-                                       message='Preparing to encrypt')
-
                 # get supported volume types
                 instance = MetadataUtil(logger)
                 if instance.is_vmss():
@@ -1595,9 +1588,6 @@ def daemon_encrypt():
             if device_item.mount_point == "/":
                 os_item_to_stamp.append(device_item)
     
-    global is_stamped
-    is_stamped = False
-
     # os to encrypt (if any) has been identified, now identify data volumes and begin encryption
     if (volume_type == CommonVariables.VolumeTypeData.lower() or volume_type == CommonVariables.VolumeTypeAll.lower()) and \
         is_not_in_stripped_os:
@@ -1625,8 +1615,8 @@ def daemon_encrypt():
     
     if (volume_type == CommonVariables.VolumeTypeOS.lower() or volume_type == CommonVariables.VolumeTypeAll.lower()) and \
         is_not_in_stripped_os:
-        # stamp here if only OS disk is being encrypted
-        if not is_stamped:
+        # stamp here if not already stamped (only OS disk is being encrypted)
+        if not hutil.is_stamped():
             stamp_disks_with_settings([], os_item_to_stamp, encryption_config)
 
         try:
@@ -1894,7 +1884,19 @@ def start_daemon(operation):
     
     encryption_config = EncryptionConfig(encryption_environment, logger)
     if encryption_config.config_file_exists():
-        exit_without_status_report()
+        if not hutil.is_stamped():
+            # remain in transitioning state until encryption settings are stamped
+            hutil.do_exit(exit_code=0,
+                          operation=operation,
+                          status=CommonVariables.extension_transitioning_status,
+                          code=str(CommonVariables.success),
+                          message="")
+        else:
+            hutil.do_exit(exit_code=0,
+                          operation=operation,
+                          status=CommonVariables.extension_success_status,
+                          code=str(CommonVariables.success),
+                          message="")
     else:
         hutil.do_exit(exit_code=0,
                       operation=operation,
