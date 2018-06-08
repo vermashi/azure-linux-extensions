@@ -458,4 +458,7 @@ class HandlerUtility:
         os.close(os.open('stamped', os.O_RDWR | os.O_CREAT))
 
     def is_stamped(self):
-        return os.path.isfile('stamped')
+        # considered stamped when flag exists or OS disk encryption has already started
+        return (os.path.isfile('stamped') or
+                os.path.isdir('/var/lib/azure_disk_encryption_config/os_encryption_markers') or
+                os.path.ismount('/oldroot'))
