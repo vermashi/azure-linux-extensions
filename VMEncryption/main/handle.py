@@ -1523,13 +1523,12 @@ def daemon_encrypt():
             (disk_util.is_os_disk_lvm() or os.path.exists('/volumes.lvm'))):
             from oscrypto.rhel_72_lvm import RHEL72LVMEncryptionStateMachine
             os_encryption = RHEL72LVMEncryptionStateMachine(hutil=hutil,
-                                                         distro_patcher=DistroPatcher,
-                                                         logger=logger,
-                                                         encryption_environment=encryption_environment)
+                                                            distro_patcher=DistroPatcher,
+                                                            logger=logger,
+                                                            encryption_environment=encryption_environment)
         elif (((distro_name == 'centos' and distro_version == '7.3.1611') or
-              (distro_name == 'centos' and distro_version.startswith('7.4'))) and 
+               (distro_name == 'centos' and distro_version.startswith('7.4'))) and
               (disk_util.is_os_disk_lvm() or os.path.exists('/volumes.lvm'))):
-
 
             from oscrypto.rhel_72_lvm import RHEL72LVMEncryptionStateMachine
             os_encryption = RHEL72LVMEncryptionStateMachine(hutil=hutil,
@@ -1537,56 +1536,57 @@ def daemon_encrypt():
                                                             logger=logger,
                                                             encryption_environment=encryption_environment)
         elif ((distro_name == 'redhat' and distro_version == '7.2') or
-            (distro_name == 'redhat' and distro_version == '7.3') or
-            (distro_name == 'redhat' and distro_version == '7.4') or
-            (distro_name == 'redhat' and distro_version == '7.5') or
-            (distro_name == 'centos' and distro_version.startswith('7.4')) or
-            (distro_name == 'centos' and distro_version == '7.3.1611') or
-            (distro_name == 'centos' and distro_version == '7.2.1511')):
+              (distro_name == 'redhat' and distro_version == '7.3') or
+              (distro_name == 'redhat' and distro_version == '7.4') or
+              (distro_name == 'redhat' and distro_version == '7.5') or
+              (distro_name == 'centos' and distro_version.startswith('7.4')) or
+              (distro_name == 'centos' and distro_version == '7.3.1611') or
+              (distro_name == 'centos' and distro_version == '7.2.1511')):
             from oscrypto.rhel_72 import RHEL72EncryptionStateMachine
             os_encryption = RHEL72EncryptionStateMachine(hutil=hutil,
-                                                            distro_patcher=DistroPatcher,
-                                                            logger=logger,
-                                                            encryption_environment=encryption_environment)
+                                                         distro_patcher=DistroPatcher,
+                                                         logger=logger,
+                                                         encryption_environment=encryption_environment)
         elif distro_name == 'redhat' and distro_version == '6.8':
             from oscrypto.rhel_68 import RHEL68EncryptionStateMachine
             os_encryption = RHEL68EncryptionStateMachine(hutil=hutil,
-                                                            distro_patcher=DistroPatcher,
-                                                            logger=logger,
-                                                            encryption_environment=encryption_environment)
+                                                         distro_patcher=DistroPatcher,
+                                                         logger=logger,
+                                                         encryption_environment=encryption_environment)
         elif distro_name == 'centos' and (distro_version == '6.8' or distro_version == '6.9'):
             from oscrypto.centos_68 import CentOS68EncryptionStateMachine
             os_encryption = CentOS68EncryptionStateMachine(hutil=hutil,
-                                                            distro_patcher=DistroPatcher,
-                                                            logger=logger,
-                                                            encryption_environment=encryption_environment)
+                                                           distro_patcher=DistroPatcher,
+                                                           logger=logger,
+                                                           encryption_environment=encryption_environment)
         elif distro_name == 'Ubuntu' and distro_version == '16.04':
             from oscrypto.ubuntu_1604 import Ubuntu1604EncryptionStateMachine
             os_encryption = Ubuntu1604EncryptionStateMachine(hutil=hutil,
-                                                                distro_patcher=DistroPatcher,
-                                                                logger=logger,
-                                                                encryption_environment=encryption_environment)
+                                                             distro_patcher=DistroPatcher,
+                                                             logger=logger,
+                                                             encryption_environment=encryption_environment)
         elif distro_name == 'Ubuntu' and distro_version == '14.04':
             from oscrypto.ubuntu_1404 import Ubuntu1404EncryptionStateMachine
             os_encryption = Ubuntu1404EncryptionStateMachine(hutil=hutil,
-                                                                distro_patcher=DistroPatcher,
-                                                                logger=logger,
-                                                                encryption_environment=encryption_environment)
+                                                             distro_patcher=DistroPatcher,
+                                                             logger=logger,
+                                                             encryption_environment=encryption_environment)
         else:
             message = "OS volume encryption is not supported on {0} {1}".format(distro_name,
                                                                                 distro_version)
             logger.log(msg=message, level=CommonVariables.ErrorLevel)
             hutil.do_exit(exit_code=0,
-                            operation='EnableEncryptionOSVolume',
-                            status=CommonVariables.extension_error_status,
-                            code=CommonVariables.encryption_failed,
-                            message=message)
+                          operation='EnableEncryptionOSVolume',
+                          status=CommonVariables.extension_error_status,
+                          code=CommonVariables.encryption_failed,
+                          message=message)
 
-        # supported volume type, identify the os device item to stamp encryption settings
-        device_items = disk_util.get_device_items(None)
-        for device_item in device_items:
-            if device_item.mount_point == "/":
-                os_item_to_stamp.append(device_item)
+        if not hutil.is_stamped():
+            # if encryption settings not yet stamped, prepare os item
+            device_items = disk_util.get_device_items(None)
+            for device_item in device_items:
+                if device_item.mount_point == "/":
+                    os_item_to_stamp.append(device_item)
     
     # os to encrypt (if any) has been identified, now identify data volumes and begin encryption
     if (volume_type == CommonVariables.VolumeTypeData.lower() or volume_type == CommonVariables.VolumeTypeAll.lower()) and \
