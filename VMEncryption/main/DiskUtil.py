@@ -396,13 +396,12 @@ class DiskUtil(object):
     def remove_crypt_item(self, crypt_item, backup_folder=None):
         try:
             if os.path.exists(self.encryption_environment.azure_crypt_mount_config_path):
-                disk_util.consolidate_azure_crypt_mount(passphrase_file)
                 mount_lines = []
 
                 with open(self.encryption_environment.azure_crypt_mount_config_path, 'r') as f:
                     mount_lines = f.readlines()
 
-                filtered_mount_lines = filter(lambda line: self.parse_azure_crypt_mount_line(line).mapper_name == crypt_item.mapper_name, mount_lines)
+                filtered_mount_lines = filter(lambda line: self.parse_azure_crypt_mount_line(line).mapper_name != crypt_item.mapper_name, mount_lines)
 
                 with open(self.encryption_environment.azure_crypt_mount_config_path, 'w') as wf:
                     wf.write(''.join(filtered_mount_lines))
