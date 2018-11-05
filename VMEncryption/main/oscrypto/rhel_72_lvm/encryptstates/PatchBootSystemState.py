@@ -100,10 +100,17 @@ class PatchBootSystemState(OSEncryptionState):
             self.command_executor.Execute('touch /oldroot/var/lib/azure_disk_encryption_config/os_encryption_markers/PatchBootSystemState', True)
             self.command_executor.Execute('umount /boot')
             self.command_executor.Execute('umount /oldroot')
-            # TODO Status report here OR do a full restart
+
+            # Status report here and we will try full restart
+            self.context.hutil.do_status_report()
+            self._reboot_vm()
+
             self.command_executor.Execute('systemctl restart waagent')
 
-            # TODO Status report here OR do a full restart
+            # Try again after a restart of wala
+            self.context.hutil.do_status_report()
+            self._reboot_vm()
+
             self.context.logger.log("Pivoted back into memroot successfully")
 
             self.unmount_lvm_volumes()

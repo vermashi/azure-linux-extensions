@@ -200,5 +200,11 @@ class RHEL72LVMEncryptionStateMachine(OSEncryptionStateMachine):
         self.log_machine_state()
         
         # TODO Status report here OR do a full restart
+        self.hutil.do_status_report(operation='EnableEncryptionOSVolume',
+                                    status=CommonVariables.extension_error_status,
+                                    status_code=str(CommonVariables.unmount_oldroot_error),
+                                    message=message)
+        self._reboot_vm()
+
         self.stop_machine()
         self.log_machine_state()

@@ -179,6 +179,9 @@ class OSEncryptionState(object):
         else:
             return True
 
+    def _reboot_vm(self):
+        self.command_executor.ExecuteInBash('reboot')
+
 OSEncryptionStateContext = namedtuple('OSEncryptionStateContext',
                                       ['hutil',
                                        'distro_patcher',
