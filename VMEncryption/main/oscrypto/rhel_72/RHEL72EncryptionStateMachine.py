@@ -197,5 +197,12 @@ class RHEL72EncryptionStateMachine(OSEncryptionStateMachine):
         self.enter_patch_boot_system()
         self.log_machine_state()
         
+        # TODO Status report here OR do a full restart
+        self.hutil.do_status_report(operation='EnableEncryptionOSVolume',
+                                    status=CommonVariables.extension_success_status,
+                                    status_code=str(CommonVariables.success),
+                                    message=None)
+        self._reboot_vm()
+
         self.stop_machine()
         self.log_machine_state()

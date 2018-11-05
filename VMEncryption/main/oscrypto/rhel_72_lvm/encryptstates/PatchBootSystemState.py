@@ -102,13 +102,19 @@ class PatchBootSystemState(OSEncryptionState):
             self.command_executor.Execute('umount /oldroot')
 
             # Status report here and we will try full restart
-            self.context.hutil.do_status_report()
+            self.context.hutil.do_status_report(operation='EnableEncryptionOSVolume',
+                                                status=CommonVariables.extension_success_status,
+                                                status_code=str(CommonVariables.success),
+                                                message=None)
             self._reboot_vm()
 
             self.command_executor.Execute('systemctl restart waagent')
 
             # Try again after a restart of wala
-            self.context.hutil.do_status_report()
+            self.context.hutil.do_status_report(operation='EnableEncryptionOSVolume',
+                                                status=CommonVariables.extension_success_status,
+                                                status_code=str(CommonVariables.success),
+                                                message=None)
             self._reboot_vm()
 
             self.context.logger.log("Pivoted back into memroot successfully")
