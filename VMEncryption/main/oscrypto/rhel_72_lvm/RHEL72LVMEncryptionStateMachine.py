@@ -199,5 +199,6 @@ class RHEL72LVMEncryptionStateMachine(OSEncryptionStateMachine):
         self.enter_patch_boot_system()
         self.log_machine_state()
         
+        # TODO Status report here OR do a full restart
         self.stop_machine()
         self.log_machine_state()
