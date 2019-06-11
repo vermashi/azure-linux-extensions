@@ -182,12 +182,12 @@ class EncryptionSettingsUtil(object):
                 })
 
         full_protector_path = os.path.join(CommonVariables.encryption_key_mount_point, protector_name)
-        with open(full_protector_path) as protector_file:
+        with open(full_protector_path, 'r') as protector_file:
             protector = protector_file.read()
             protector_base64 = base64.standard_b64encode(protector)
             protectors = [{"Name": protector_name, "Base64Key": protector_base64}]
 
-        protectors_name_only = [{"Name": protector["Name"], "Base64Key": "REDACTED"} for protector in protectors ]
+        protectors_name_only = [{"Name": protector["Name"], "Base64Key": "REDACTED [Size: {0}]".format(len(protector["Base64Key"]))} for protector in protectors ]
 
         data = {
             "DiskEncryptionDataVersion": self._DISK_ENCRYPTION_DATA_VERSION_V4,
