@@ -20,7 +20,7 @@
 class CommonVariables:
     utils_path_name = 'Utils'
     extension_name = 'AzureDiskEncryptionForLinux'
-    extension_version = '0.1.0.999341'
+    extension_version = '0.1.0.999342'
     extension_type = extension_name
     extension_media_link = 'https://amextpaas.blob.core.windows.net/prod/' + extension_name + '-' + str(extension_version) + '.zip'
     extension_label = 'Windows Azure VMEncryption Extension for Linux IaaS'
@@ -50,6 +50,32 @@ class CommonVariables:
     etc_defaults_cryptdisks_line = '\nCRYPTDISKS_MOUNT="$CRYPTDISKS_MOUNT {0}"\n'
 
     """
+    wire protocol message format
+    """
+    encryption_key_file_name = 'LinuxPassPhraseFileName'
+    encryption_algorithms = ['RSA-OAEP', 'RSA-OAEP-256', 'RSA1_5']
+    default_encryption_algorithm = 'RSA-OAEP'
+    encryption_settings_file_name_pattern = 'settings_{0}.json'
+    encryption_settings_counter_file = 'counter.txt'
+    encryption_settings_counter_path = encryption_key_mount_point + '/' + encryption_settings_counter_file
+
+    wireserver_endpoint = "http://169.254.169.254:80/machine?comp=diskEncryptionData"
+    wireprotocol_msg_headers = {
+        "Content-Type": "text/xml",
+        "x-ms-version": "2015-04-05"
+    }
+    wireprotocol_msg_template_v2 = """<?xml version="1.0"?>
+    <DiskEncryptionData version="2.0">
+        <DiskEncryptionSettingsFile>{settings_file_name}</DiskEncryptionSettingsFile>
+    </DiskEncryptionData>
+    """
+    wireprotocol_msg_template_v3 = """<?xml version="1.0"?>
+    <DiskEncryptionData version="3.0">
+        <DiskEncryptionDetailsAsJson>{settings_json_blob}</DiskEncryptionDetailsAsJson>
+    </DiskEncryptionData>
+    """
+
+    """
     parameter key names
     """
     PassphraseFileNameKey = 'BekFileName'
@@ -62,6 +88,8 @@ class CommonVariables:
     default_encryption_algorithm = 'RSA-OAEP'
     DiskFormatQuerykey = "DiskFormatQuery"
     PassphraseKey = 'Passphrase'
+    KeyVaultResourceIdKey = 'KeyVaultResourceId'
+    KekVaultResourceIdKey = 'KekVaultResourceId'
 
     """
     value for VolumeType could be OS or Data
@@ -86,6 +114,7 @@ class CommonVariables:
     UpdateEncryptionSettings = 'UpdateEncryptionSettings'
     DisableEncryption = 'DisableEncryption'
     QueryEncryptionStatus = 'QueryEncryptionStatus'
+    Migrate = 'Migrate'
 
     """
     encryption config keys
@@ -170,6 +199,13 @@ class CommonVariables:
     unmount_oldroot_error = 22
     operation_lookback_failed = 23
     unknown_error = 100
+
+    """
+    error messages
+    """
+    migration_detached_header = "One or more data disk use detached LUKS header. Migration cannot be done."
+    migration_detached_header_xfs = "One or more data disk use detached LUKS header with xfs filesystem. Migration cannot be done."
+    migration_wrong_passphrase = "Passphrase validation failed. Migration cannot be done."
 
 class TestHooks:
     search_not_only_ide = False
